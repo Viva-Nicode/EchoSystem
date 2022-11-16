@@ -15,7 +15,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
 public class ClientStateMachine implements Runnable {
-	private EchoClientState state = EchoClientState.S0;
+	private EchoClientState state = EchoClientState.S1;
 	private Boolean exitMachine = false; // End state machine
 	private String sound;
 	private BufferedReader bufferedReader;
@@ -23,6 +23,12 @@ public class ClientStateMachine implements Runnable {
 	private Socket socket = null;
 
 	public void run() {
+		try {
+			this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			this.printWriter = new PrintWriter(socket.getOutputStream());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		while (exitMachine == false) {
 			switch (state) {
 				case S1:
@@ -38,7 +44,7 @@ public class ClientStateMachine implements Runnable {
 				case S3:
 					while (true) {
 						JSONObject rPacket = receivePacket();
-						if (rPacket.get("packetId") == EchoPacketCode.ACK_YAHO) {
+						if ((rPacket.get("packetId") + "").equals("ACK_YAHO")) {
 							out.println(rPacket.get("message"));
 						} else {
 							state = EchoClientState.S1;
@@ -85,9 +91,7 @@ public class ClientStateMachine implements Runnable {
 	}
 
 	public ClientStateMachine() throws UnknownHostException, IOException {
-		this.socket = new Socket("localhost", 12345);
-		this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		this.printWriter = new PrintWriter(socket.getOutputStream());
+		this.socket = new Socket("localhost", 13243);
 	}
 
 }

@@ -27,7 +27,7 @@ public class ServerStateMachine implements Runnable {
 			switch (state) {
 				case SA:
 					JSONObject rPacket = receivePacket();
-					if (parseInt(rPacket.get("packetId") + "") == 1) {
+					if ((rPacket.get("packetId") + "").equals("REQ_YAHO")) {
 						sound = rPacket.get("message") + "";
 						loopNum = parseInt(rPacket.get("loopNum") + "");
 						state = EchoServerState.SB;
@@ -37,9 +37,10 @@ public class ServerStateMachine implements Runnable {
 					break;
 				case SB:
 					if (loopNum != 0) {
-						sendPacket(EchoPacketCode.ACK_YAHO, sound);
+						sendPacket(sound);
 						loopNum--;
 					} else {
+						sendLoopEndPacket();
 						state = EchoServerState.SD;
 					}
 					break;
@@ -60,6 +61,7 @@ public class ServerStateMachine implements Runnable {
 	public JSONObject receivePacket() {
 		try {
 			String request = bufferedReader.readLine();
+			System.out.println(request);
 			return (JSONObject) new JSONParser().parse(request);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -81,6 +83,18 @@ public class ServerStateMachine implements Runnable {
 
 	public void sendPacket(EchoPacketCode c, String sound) {
 		String jsonString = JsonObjectCreator.createJsonObjectString(c, sound);
+		printWriter.println(jsonString);
+		printWriter.flush();
+	}
+
+	public void sendLoopEndPacket() {
+		String jsonString = JsonObjectCreator.createJsonObjectString("ACK_LOOPEND", "");
+		printWriter.println(jsonString);
+		printWriter.flush();
+	}
+
+	public void sendPacket(String sound) {
+		String jsonString = JsonObjectCreator.createJsonObjectString(sound);
 		printWriter.println(jsonString);
 		printWriter.flush();
 	}
